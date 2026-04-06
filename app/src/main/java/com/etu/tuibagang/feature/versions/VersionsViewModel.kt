@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -20,11 +21,31 @@ class VersionsViewModel(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    val apks = repository.observeApks().stateIn(
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val allApks = repository.observeApks().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = emptyList()
     )
+
+    val apks = combine(allApks, _searchQuery) { list, query ->
+        if (query.isBlank()) list
+        else list.filter { apk ->
+            apk.appName.contains(query, ignoreCase = true) ||
+                    apk.packageName.contains(query, ignoreCase = true) ||
+                    apk.versionCode.contains(query, ignoreCase = true)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = emptyList()
+    )
+
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+    }
 
     init {
         refresh()

@@ -36,12 +36,15 @@ fun AppRoot() {
     val apks by viewModel.apks.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
 
     AppRootContent(
             apks = apks,
             isRefreshing = isRefreshing,
             downloadingToken = downloadingToken,
             error = error,
+            searchQuery = searchQuery,
+            onSearchQueryChange = viewModel::onSearchQueryChange,
             onRefresh = viewModel::refresh,
             onInstallApk = { url, token ->
                 if (downloadingToken != null) return@AppRootContent

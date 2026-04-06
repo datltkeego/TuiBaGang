@@ -55,6 +55,8 @@ internal fun AppRootContent(
     isRefreshing: Boolean,
     downloadingToken: String?,
     error: String?,
+    searchQuery: String = "",
+    onSearchQueryChange: (String) -> Unit = {},
     onRefresh: () -> Unit,
     onInstallApk: (String, String) -> Unit
 ) {
@@ -65,24 +67,28 @@ internal fun AppRootContent(
         bottomBar = {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val destination = navBackStackEntry?.destination
+            val currentRoute = destination?.route
 
-            NavigationBar {
-                AppTab.entries.forEach { tab ->
-                    val selected = destination?.hierarchy?.any { it.route == tab.route } == true
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(tab.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (currentRoute?.startsWith("version_detail") != true) {
+                NavigationBar {
+                    AppTab.entries.forEach { tab ->
+                        val selected =
+                            destination?.hierarchy?.any { it.route == tab.route } == true
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = tab.icon,
-                        label = { Text(tab.label) }
-                    )
+                            },
+                            icon = tab.icon,
+                            label = { Text(tab.label) }
+                        )
+                    }
                 }
             }
         }
@@ -98,6 +104,8 @@ internal fun AppRootContent(
                         isRefreshing = isRefreshing,
                         downloadingToken = downloadingToken,
                         error = error,
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = onSearchQueryChange,
                         onRefresh = onRefresh,
                         onInstallApk = onInstallApk,
                         onOpenDetail = { apkId ->
