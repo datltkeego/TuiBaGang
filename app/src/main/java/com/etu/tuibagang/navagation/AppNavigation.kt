@@ -23,8 +23,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.etu.tuibagang.data.model.ApkItem
+import com.etu.tuibagang.feature.versions.SortDirection
 import com.etu.tuibagang.ui.apkdetail.PlaceholderScreen
-import com.etu.tuibagang.ui.apkdetail.VersionDetailScreen
+import com.etu.tuibagang.ui.versiondetail.VersionDetailScreen
 import com.etu.tuibagang.ui.apkdetail.VersionsScreenContent
 
 private enum class AppTab(
@@ -56,7 +57,11 @@ internal fun AppRootContent(
     downloadingToken: String?,
     error: String?,
     searchQuery: String = "",
+    sortByDate: SortDirection = SortDirection.NONE,
+    sortByName: SortDirection = SortDirection.NONE,
     onSearchQueryChange: (String) -> Unit = {},
+    onToggleSortByDate: () -> Unit = {},
+    onToggleSortByName: () -> Unit = {},
     onRefresh: () -> Unit,
     onInstallApk: (String, String) -> Unit
 ) {
@@ -105,7 +110,11 @@ internal fun AppRootContent(
                         downloadingToken = downloadingToken,
                         error = error,
                         searchQuery = searchQuery,
+                        sortByDate = sortByDate,
+                        sortByName = sortByName,
                         onSearchQueryChange = onSearchQueryChange,
+                        onToggleSortByDate = onToggleSortByDate,
+                        onToggleSortByName = onToggleSortByName,
                         onRefresh = onRefresh,
                         onInstallApk = onInstallApk,
                         onOpenDetail = { apkId ->

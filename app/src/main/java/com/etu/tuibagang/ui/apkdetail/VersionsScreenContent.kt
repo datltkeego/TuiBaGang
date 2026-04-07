@@ -3,23 +3,34 @@ package com.etu.tuibagang.ui.apkdetail
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.etu.tuibagang.data.model.ApkItem
+import com.etu.tuibagang.feature.versions.SortDirection
 import com.etu.tuibagang.ui.theme.TuiBaGangTheme
 
 @Composable
@@ -48,7 +60,11 @@ internal fun VersionsScreenContent(
     downloadingToken: String?,
     error: String?,
     searchQuery: String = "",
+    sortByDate: SortDirection = SortDirection.NONE,
+    sortByName: SortDirection = SortDirection.NONE,
     onSearchQueryChange: (String) -> Unit = {},
+    onToggleSortByDate: () -> Unit = {},
+    onToggleSortByName: () -> Unit = {},
     onRefresh: () -> Unit,
     onInstallApk: (String, String) -> Unit,
     onOpenDetail: (Long) -> Unit
@@ -117,6 +133,26 @@ internal fun VersionsScreenContent(
                 }
             }
 
+            AnimatedVisibility(visible = !searchExpanded) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SortChip(
+                        label = "Date",
+                        direction = sortByDate,
+                        onClick = onToggleSortByDate
+                    )
+                    SortChip(
+                        label = "Name",
+                        direction = sortByName,
+                        onClick = onToggleSortByName
+                    )
+                }
+            }
+
             if (isRefreshing && apks.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -143,7 +179,12 @@ internal fun VersionsScreenContent(
                     }
                 }
             } else {
+                val listState = rememberLazyListState()
+                LaunchedEffect(sortByDate, sortByName) {
+                    listState.scrollToItem(0)
+                }
                 LazyColumn(
+                    state = listState,
                     contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -157,6 +198,55 @@ internal fun VersionsScreenContent(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SortChip(
+    label: String,
+    direction: SortDirection,
+    onClick: () -> Unit
+) {
+    val isActive = direction != SortDirection.NONE
+    OutlinedCard(
+        border = BorderStroke(
+            width = 1.dp,
+            color = if (isActive) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.outline
+        ),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = if (isActive) MaterialTheme.colorScheme.primaryContainer
+            else MaterialTheme.colorScheme.surface
+        ),
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = when (direction) {
+                    SortDirection.ASC -> Icons.Default.ArrowUpward
+                    SortDirection.DESC -> Icons.Default.ArrowDownward
+                    SortDirection.NONE -> Icons.AutoMirrored.Filled.Sort
+                },
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = if (isActive) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = when (direction) {
+                    SortDirection.NONE -> label
+                    SortDirection.ASC -> "$label ↑"
+                    SortDirection.DESC -> "$label ↓"
+                },
+                style = MaterialTheme.typography.labelMedium,
+                color = if (isActive) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

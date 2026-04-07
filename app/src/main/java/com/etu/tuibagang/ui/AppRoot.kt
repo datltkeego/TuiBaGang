@@ -37,6 +37,8 @@ fun AppRoot() {
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
+    val sortByDate by viewModel.sortByDate.collectAsStateWithLifecycle()
+    val sortByName by viewModel.sortByName.collectAsStateWithLifecycle()
 
     AppRootContent(
             apks = apks,
@@ -44,7 +46,11 @@ fun AppRoot() {
             downloadingToken = downloadingToken,
             error = error,
             searchQuery = searchQuery,
+            sortByDate = sortByDate,
+            sortByName = sortByName,
             onSearchQueryChange = viewModel::onSearchQueryChange,
+            onToggleSortByDate = viewModel::toggleSortByDate,
+            onToggleSortByName = viewModel::toggleSortByName,
             onRefresh = viewModel::refresh,
             onInstallApk = { url, token ->
                 if (downloadingToken != null) return@AppRootContent

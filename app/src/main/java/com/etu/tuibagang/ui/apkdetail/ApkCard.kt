@@ -1,5 +1,7 @@
 package com.etu.tuibagang.ui.apkdetail
 
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,8 +13,10 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,24 @@ internal fun ApkCard(
     onInstallApk: (String, String) -> Unit,
     onOpenDetail: (Long) -> Unit
 ) {
+    val context = LocalContext.current
+    val installedVersion = remember(item.packageName) {
+        try {
+            val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(
+                    item.packageName,
+                    PackageManager.PackageInfoFlags.of(0)
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(item.packageName, 0)
+            }
+            packageInfo.versionName
+        } catch (_: PackageManager.NameNotFoundException) {
+            null
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,12 +69,21 @@ internal fun ApkCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (item.isLatest) {
-                    FilterChip(
-                        selected = true,
-                        onClick = {},
-                        label = { Text("Latest") }
-                    )
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (item.isLatest) {
+                        FilterChip(
+                            selected = true,
+                            onClick = {},
+                            label = { Text("Latest") }
+                        )
+                    }
+                    if (installedVersion != null) {
+                        FilterChip(
+                            selected = item.versionCode == installedVersion,
+                            onClick = {},
+                            label = { Text("Installed: $installedVersion") }
+                        )
+                    }
                 }
             }
 
